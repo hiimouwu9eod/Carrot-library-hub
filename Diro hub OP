@@ -1,0 +1,115 @@
+--// Load Rayfield
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Success Hub",
+   Icon = 0,
+   LoadingTitle = "Success Hub ....",
+   LoadingSubtitle = "by skibds scirpter",
+   Theme = "Default",
+   ToggleUIKeybind = "O",
+})
+
+--// Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+--========================================================
+-- Player Tab
+--========================================================
+local PlayerTab = Window:CreateTab("Player", 4483362458)
+
+local SpeedValue = 16
+local SpeedEnabled = false
+
+PlayerTab:CreateSlider({
+   Name = "WalkSpeed",
+   Range = {16, 200},
+   Increment = 1,
+   Suffix = "Speed",
+   CurrentValue = 16,
+   Flag = "PlayerSpeedSlider",
+   Callback = function(Value)
+      SpeedValue = Value
+      if SpeedEnabled then
+         LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = SpeedValue
+      end
+   end,
+})
+
+PlayerTab:CreateToggle({
+   Name = "Enable Speed",
+   CurrentValue = false,
+   Flag = "PlayerSpeedToggle",
+   Callback = function(Value)
+      SpeedEnabled = Value
+      if Value then
+         LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = SpeedValue
+      else
+         LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
+      end
+   end,
+})
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid").WalkSpeed = SpeedEnabled and SpeedValue or 16
+end)
+
+--========================================================
+-- Events Tab
+--========================================================
+local EventTab = Window:CreateTab("Events", 4483362458)
+
+local AuroraFarm = false
+
+EventTab:CreateToggle({
+   Name = "Aurora Auto Collect",
+   CurrentValue = false,
+   Flag = "AuroraToggle",
+   Callback = function(Value)
+      AuroraFarm = Value
+      if AuroraFarm then
+         task.spawn(function()
+            while AuroraFarm do
+                local args = {Instance.new("Part", nil)}
+                pcall(function()
+                    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("UIEvents"):WaitForChild("AuroraCollect"):FireServer(unpack(args))
+                end)
+                task.wait(0.1)
+            end
+         end)
+      end
+   end,
+})
+
+--========================================================
+-- Auto Buy Stock/Spin Tab
+--========================================================
+local AutoBuyTab = Window:CreateTab("Auto Buy Stock/Spin", 4483362458)
+
+AutoBuyTab:CreateButton({
+    Name = "Auto Clicker",
+    Callback = function()
+        getgenv().key = "Hostile"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Hosvile/The-telligence/main/MC%20KSystem%202"))()
+    end,
+})
+
+AutoBuyTab:CreateButton({
+    Name = "Delete UI",
+    Callback = function()
+        -- Remove loaded key system UI
+        for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
+            if gui.Name:match("MC KSystem") or gui.Name:match("ScreenGui") then
+                gui:Destroy()
+            end
+        end
+        for _, gui in pairs(game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):GetChildren()) do
+            if gui.Name:match("MC KSystem") or gui.Name:match("ScreenGui") then
+                gui:Destroy()
+            end
+        end
+    end,
+})
