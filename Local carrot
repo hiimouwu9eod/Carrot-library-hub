@@ -1,0 +1,125 @@
+loadstring([[
+-- Load official Rayfield library
+loadstring(game:HttpGet("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source.lua"))()
+
+-- Carrot color palette
+local CARROT_ORANGE       = Color3.fromRGB(255, 143, 51)
+local CARROT_LIGHT        = Color3.fromRGB(255, 186, 120)
+local CARROT_DARK         = Color3.fromRGB(196, 98, 13)
+local CARROT_GREEN        = Color3.fromRGB(99, 169, 63)
+local CARROT_BG           = Color3.fromRGB(255, 245, 235)
+local TEXT_DARK           = Color3.fromRGB(34, 34, 34)
+
+-- Apply carrot colors to the Default theme
+local DefaultTheme = RayfieldLibrary.Theme.Default
+DefaultTheme.TextColor               = TEXT_DARK
+DefaultTheme.Background              = CARROT_BG
+DefaultTheme.Topbar                  = CARROT_ORANGE
+DefaultTheme.Shadow                  = CARROT_DARK
+DefaultTheme.NotificationBackground  = CARROT_BG
+DefaultTheme.NotificationActionsBackground = CARROT_LIGHT
+DefaultTheme.TabBackground           = CARROT_LIGHT
+DefaultTheme.TabStroke               = CARROT_DARK
+DefaultTheme.TabBackgroundSelected   = CARROT_ORANGE
+DefaultTheme.TabTextColor            = TEXT_DARK
+DefaultTheme.SelectedTabTextColor    = CARROT_DARK
+DefaultTheme.ElementBackground       = CARROT_LIGHT
+DefaultTheme.ElementBackgroundHover  = CARROT_ORANGE
+DefaultTheme.SecondaryElementBackground = CARROT_BG
+DefaultTheme.ElementStroke           = CARROT_DARK
+DefaultTheme.SecondaryElementStroke  = CARROT_DARK
+DefaultTheme.SliderBackground        = CARROT_LIGHT
+DefaultTheme.SliderProgress          = CARROT_ORANGE
+DefaultTheme.SliderStroke            = CARROT_DARK
+DefaultTheme.ToggleBackground        = CARROT_BG
+DefaultTheme.ToggleEnabled           = CARROT_GREEN
+DefaultTheme.ToggleDisabled          = CARROT_DARK
+
+-- Helper: recolor any single UI instance
+local function applyCarrot(inst)
+    if not inst or not inst.Parent then return end
+    if inst:IsA("Frame") or inst:IsA("ScrollingFrame") then
+        inst.BackgroundColor3 = CARROT_BG
+        if inst.BorderColor3 then inst.BorderColor3 = CARROT_DARK end
+    elseif inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox") then
+        inst.TextColor3 = TEXT_DARK
+        if inst.BackgroundTransparency < 1 then inst.BackgroundColor3 = CARROT_LIGHT end
+    elseif inst:IsA("ImageLabel") or inst:IsA("ImageButton") then
+        inst.ImageColor3 = CARROT_LIGHT
+        if inst.BackgroundTransparency < 1 then inst.BackgroundColor3 = CARROT_BG end
+    elseif inst:IsA("UIStroke") then
+        inst.Color = CARROT_DARK
+    elseif inst:IsA("UIGradient") then
+        inst.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, CARROT_LIGHT), ColorSequenceKeypoint.new(1, CARROT_ORANGE)})
+    end
+end
+
+-- Recolor all descendants of a root
+local function recolorAll(root)
+    for _, v in ipairs(root:GetDescendants()) do
+        applyCarrot(v)
+    end
+end
+
+-- Find Rayfield GUI
+local function findRayfieldRoot()
+    for _, container in ipairs({game:GetService("CoreGui"), game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")}) do
+        if container then
+            local gui = container:FindFirstChild("Rayfield")
+            if gui then return gui end
+            for _, desc in ipairs(container:GetDescendants()) do
+                if desc.Name == "Rayfield" and desc:IsA("ScreenGui") then
+                    return desc
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- Main: dynamic carrot recoloring
+spawn(function()
+    local root
+    for i = 1, 30 do
+        root = findRayfieldRoot()
+        if root then break end
+        wait(0.15)
+    end
+    if not root then
+        warn("[CarrotTheme] Waiting for Rayfield GUI...")
+        while not root do
+            wait(1)
+            root = findRayfieldRoot()
+        end
+    end
+
+    recolorAll(root)
+
+    -- Recolor dynamically added descendants
+    root.DescendantAdded:Connect(function(desc)
+        wait(0.03)
+        applyCarrot(desc)
+        for _, c in ipairs(desc:GetChildren()) do
+            applyCarrot(c)
+        end
+    end)
+
+    -- Watch for GUI recreation
+    for _, container in ipairs({game:GetService("CoreGui"), game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")}) do
+        if container then
+            container.ChildAdded:Connect(function(child)
+                if child and child.Name == "Rayfield" then
+                    wait(0.05)
+                    recolorAll(child)
+                    child.DescendantAdded:Connect(function(d)
+                        wait(0.02)
+                        applyCarrot(d)
+                    end)
+                end
+            end)
+        end
+    end
+
+    print("[CarrotTheme] Rayfield UI is fully carrot-themed dynamically!")
+end)
+]])()
